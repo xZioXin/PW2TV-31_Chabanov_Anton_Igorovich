@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор викидів твердих частинок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+        .fuel-params {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Калькулятор валових викидів твердих частинок</h1>
+    
+    <div class="form-group">
+        <label for="fuelType">Тип палива:</label>
+        <select id="fuelType" onchange="toggleFuelParams()">
+            <option value="coal">Вугілля</option>
+            <option value="oil">Мазут</option>
+            <option value="gas">Природний газ</option>
+        </select>
+    </div>
+    
+    <div id="coalParams" class="fuel-params">
+        <div class="form-group">
+            <label for="coalConsumption">Витрата вугілля (т):</label>
+            <input type="number" id="coalConsumption" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="coalAshContent">Зольність вугілля (A', %):</label>
+            <input type="number" id="coalAshContent" value="25.20" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="coalHeatValue">Нижча теплота згоряння (Qᵣ, МДж/кг):</label>
+            <input type="number" id="coalHeatValue" value="20.47" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="coalEfficiency">Ефективність золоуловлювання (ηзу):</label>
+            <input type="number" id="coalEfficiency" value="0.985" step="0.001" min="0" max="1">
+        </div>
+        <div class="form-group">
+            <label for="coalAshFraction">Частка легкої золи (a<sub>вин</sub>):</label>
+            <input type="number" id="coalAshFraction" value="0.8" step="0.01" min="0" max="1">
+        </div>
+        <div class="form-group">
+            <label for="coalCombustibles">Горючі у викиді (Γ<sub>вин</sub>, %):</label>
+            <input type="number" id="coalCombustibles" value="1.5" step="0.1">
+        </div>
+    </div>
+    
+    <div id="oilParams" class="fuel-params hidden">
+        <div class="form-group">
+            <label for="oilConsumption">Витрата мазуту (т):</label>
+            <input type="number" id="oilConsumption" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="oilAshContent">Зольність мазуту (A', %):</label>
+            <input type="number" id="oilAshContent" value="0.15" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="oilHeatValue">Нижча теплота згоряння (Qᵣ, МДж/кг):</label>
+            <input type="number" id="oilHeatValue" value="39.48" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="oilEfficiency">Ефективність золоуловлювання (ηзу):</label>
+            <input type="number" id="oilEfficiency" value="0.985" step="0.001" min="0" max="1">
+        </div>
+        <div class="form-group">
+            <label for="oilCombustibles">Горючі у викиді (Γ<sub>вин</sub>, %):</label>
+            <input type="number" id="oilCombustibles" value="0" step="0.1">
+        </div>
+    </div>
+    
+    <div id="gasParams" class="fuel-params hidden">
+        <div class="form-group">
+            <label for="gasConsumption">Витрата газу (тис. м³):</label>
+            <input type="number" id="gasConsumption" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="gasHeatValue">Нижча теплота згоряння (Qᵣ, МДж/м³):</label>
+            <input type="number" id="gasHeatValue" value="33.08" step="0.01">
+        </div>
+        <div class="form-group">
+            <label for="gasDensity">Густина газу (кг/м³):</label>
+            <input type="number" id="gasDensity" value="0.723" step="0.001">
+        </div>
+    </div>
+    
+    <button onclick="calculateEmissions()">Розрахувати</button>
+    
+    <div id="results" class="results hidden">
+        <h2>Результати розрахунків</h2>
+        <table>
+            <tr>
+                <th>Параметр</th>
+                <th>Значення</th>
+            </tr>
+            <tr>
+                <td>Показник емісії твердих частинок (k<sub>тв</sub>)</td>
+                <td id="emissionFactor"></td>
+            </tr>
+            <tr>
+                <td>Валовий викид твердих частинок (E<sub>тв</sub>)</td>
+                <td id="totalEmission"></td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        function toggleFuelParams() {
+            const fuelType = document.getElementById('fuelType').value;
+            document.getElementById('coalParams').classList.add('hidden');
+            document.getElementById('oilParams').classList.add('hidden');
+            document.getElementById('gasParams').classList.add('hidden');
+            
+            if (fuelType === 'coal') {
+                document.getElementById('coalParams').classList.remove('hidden');
+            } else if (fuelType === 'oil') {
+                document.getElementById('oilParams').classList.remove('hidden');
+            } else {
+                document.getElementById('gasParams').classList.remove('hidden');
+            }
+        }
+        
+        function calculateEmissions() {
+            const fuelType = document.getElementById('fuelType').value;
+            let emissionFactor, totalEmission;
+            
+            if (fuelType === 'coal') {
+                const consumption = parseFloat(document.getElementById('coalConsumption').value);
+                const ashContent = parseFloat(document.getElementById('coalAshContent').value);
+                const heatValue = parseFloat(document.getElementById('coalHeatValue').value);
+                const efficiency = parseFloat(document.getElementById('coalEfficiency').value);
+                const ashFraction = parseFloat(document.getElementById('coalAshFraction').value);
+                const combustibles = parseFloat(document.getElementById('coalCombustibles').value);
+                
+                emissionFactor = (1e6 / heatValue) * ashFraction * (ashContent /
+                                (100 - combustibles)) * (1 - efficiency);
+                totalEmission = 1e-6 * emissionFactor * heatValue * consumption;
+                
+            } else if (fuelType === 'oil') {
+                const consumption = parseFloat(document.getElementById('oilConsumption').value);
+                const ashContent = parseFloat(document.getElementById('oilAshContent').value);
+                const heatValue = parseFloat(document.getElementById('oilHeatValue').value);
+                const efficiency = parseFloat(document.getElementById('oilEfficiency').value);
+                const combustibles = parseFloat(document.getElementById('oilCombustibles').value);
+                
+                emissionFactor = (1e6 / heatValue) * 1 * (ashContent / 100) * 
+                                ((100 - combustibles) / 100) * (1 - efficiency);
+                totalEmission = 1e-6 * emissionFactor * heatValue * consumption;
+                
+            } else {
+                emissionFactor = 0;
+                totalEmission = 0;
+            }
+            
+            document.getElementById('emissionFactor').textContent = emissionFactor.toFixed(2) + ' г/ГДж';
+            document.getElementById('totalEmission').textContent = totalEmission.toFixed(2) + ' т';
+            document.getElementById('results').classList.remove('hidden');
+        }
+        
+        toggleFuelParams();
+    </script>
+</body>
+</html>
